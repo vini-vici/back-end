@@ -1,14 +1,14 @@
 const { DynamoDBDocumentClient, ScanCommand } = require('@aws-sdk/lib-dynamodb');
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBClient, ListTablesCommand } = require('@aws-sdk/client-dynamodb');
+const { NODE_ENV = 'development' } = process.env;
 const ddbClient = new DynamoDBClient({
-    endpoint: 'http://host.docker.internal:4000',
+    endpoint: NODE_ENV === 'development' ? 'http://host.docker.internal:4000' : undefined,
     region: process.env.AWS_REGION || 'us-west-1'
 });
 
 const client = DynamoDBDocumentClient.from(ddbClient);
 /**
  * A simple example includes a HTTP get method to get all items from a DynamoDB table.
- * @param {import('@aws')}
  */
 exports.getAllItemsHandler = async event => {
     // Quick Debug.

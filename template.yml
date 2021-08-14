@@ -5,16 +5,39 @@
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  back-end
+  Vicci Back-End. Very simple setup using the NodeJS and the SAM CLI.
 
 # Transform section specifies one or more macros that AWS CloudFormation uses to process your template
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
 Transform:
 - AWS::Serverless-2016-10-31
 
+Parameters:
+  Stage:
+    Type: String
+    Default: alpha
+    AllowedValues: ["alpha", "beta", "gamma", "prod"]
+    Description: current deployable stage.
+
+Conditions:
+  isProd: !Not [!Equals [!Ref Stage, "alpha"]]
+  
+Globals:
+  Function:
+    Runtime: nodejs14.x
 # Resources declares the AWS resources that you want to include in the stack
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
 Resources:
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      Cors: "'*'"
+      Auth:
+        DefaultAuthorizer: MyCognitoAuthorizer
+        Authorizers:
+          MyCognitoAuthorizer:
+            UserPoolArn: !ImportValue  UserPoolArn
   # Each Lambda function is defined by properties:
   # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
 
@@ -30,15 +53,17 @@ Resources:
       Policies:
         # Give Create/Read/Update/Delete Permissions to the SampleTable
         - DynamoDBCrudPolicy:
-            TableName: !Ref SampleTable
+            TableName: !Ref TodosTable
       Environment:
         Variables:
           # Make table name accessible as environment variable from function code during execution
-          SAMPLE_TABLE: !Ref SampleTable
+          TODOS_TABLE: !Ref TodosTable
+          NODE_ENV: !If [isProd, 'production', 'development']
       Events:
         Api:
           Type: Api
           Properties:
+            RestApiId: !Ref ApiGateway
             Path: /
             Method: GET
   # Each Lambda function is defined by properties:
@@ -56,15 +81,17 @@ Resources:
       Policies:
         # Give Create/Read/Update/Delete Permissions to the SampleTable
         - DynamoDBCrudPolicy:
-            TableName: !Ref SampleTable
+            TableName: !Ref TodosTable
       Environment:
         Variables:
           # Make table name accessible as environment variable from function code during execution
-          SAMPLE_TABLE: !Ref SampleTable
+          TODOS_TABLE: !Ref TodosTable
+          NODE_ENV: production
       Events:
         Api:
           Type: Api
           Properties:
+            RestApiId: !Ref ApiGateway
             Path: /{id}
             Method: GET
   # Each Lambda function is defined by properties:
@@ -82,33 +109,69 @@ Resources:
       Policies:
         # Give Create/Read/Update/Delete Permissions to the SampleTable
         - DynamoDBCrudPolicy:
-            TableName: !Ref SampleTable
+            TableName: !Ref TodosTable
       Environment:
         Variables:
           # Make table name accessible as environment variable from function code during execution
-          SAMPLE_TABLE: !Ref SampleTable
+          TODOS_TABLE: !Ref TodosTable
+          NODE_ENV: production
       Events:
         Api:
           Type: Api
           Properties:
+            RestApiId: !Ref ApiGateway
             Path: /
             Method: POST
+
+    deleteItemFunction:
+      Type: AWS::Serverless::Function
+      Properties:
+        Handler: src/handlers/delete-item.deleteItem
+        Runtime: nodejs14.x
+        MemorySize: 128
+        Timeout: 100
+        Description: Delete a todo.
+        Policies:
+          - DynamoDBCrudPolicy:
+            TableName: !Ref TodosTable
+        Environment:
+          Variables:
+            TODOS_TABLE: !Ref TodosTable
+            NODE_ENV: production
+            
   # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
   # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable
 
   # DynamoDB table to store item: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
-  SampleTable:
-    Type: AWS::Serverless::SimpleTable
+  TodosTable:
+    Type: AWS::DynamoDB::Table
     Properties:
-      TableName: sample
-      PrimaryKey:
-        Name: id
-        Type: String
+      # Self explanatory
+      TableName: todos
+      # Need an ID and for faster scanning, a user_id
+      AttributeDefinitions: 
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+      # Which keys do what on this table.
+      # the id key is a hash, aka a straight look up.
+      # the user_id is a range, aka it could be a way to simplify things down
+      # after using the ID key to pull values.
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: user_id
+          KeyType: RANGE
       ProvisionedThroughput:
-        ReadCapacityUnits: 2
-        WriteCapacityUnits: 2
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+    
+
 
 Outputs:
   WebEndpoint:
     Description: "API Gateway endpoint URL for Prod stage"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/"
+    Export:
+      Name: ApiEndpoint
