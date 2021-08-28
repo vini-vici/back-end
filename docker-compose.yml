@@ -5,7 +5,7 @@ volumes:
 
 services:
   dynamodb:
-    container_name: ddb
+    container_name: ddb-vicci
     image: amazon/dynamodb-local
     command: -jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal
     volumes:

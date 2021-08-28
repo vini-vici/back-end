@@ -1,8 +1,0 @@
-{
-  "plugins": [
-    "@core-fabrications"
-  ],
-  "extends": [
-    "plugin:@core-fabrications/recommended"
-  ]
-}
