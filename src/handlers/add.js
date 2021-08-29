@@ -1,40 +1,47 @@
 // Create clients and set shared const values outside of the handler.
+const { v4 } = require('uuid');
 
-// Create a DocumentClient that represents the query to add an item
-const dynamodb = require('aws-sdk/clients/dynamodb');
-const docClient = new dynamodb.DocumentClient({
-  endpoint: 'http://host.docker.internal:4000',
-  region: process.env.AWS_REGION || 'us-west-2'
-});
+const { client } = require('../common');
 
-
-/**
- * A simple example includes a HTTP post method to add one item to a DynamoDB table.
- */
+/** @param {import('aws-lambda').APIGatewayProxyWithCognitoAuthorizerEvent} event */
 exports.putItemHandler = async event => {
-  if (event.httpMethod !== 'POST') 
-    throw new Error(`postMethod only accepts POST method, you tried: ${event.httpMethod} method.`);
-  
+
   // All log statements are written to CloudWatch
   console.info('received:', event.body);
+  console.info('claims', event.requestContext);
 
   // Get id and name from the body of the request
   const body = JSON.parse(event.body);
-  const {id} = body;
-  const {name} = body;
+  const { title, description, done = false } = body;
+  const id = v4();
+  const {
+    authorizer: {
+      claims: {
+        sub: user_id
+      }
+    }
+  } = event.requestContext;
 
   // Creates a new item, or replaces an old item with a new item
   // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#put-property
   var params = {
-    TableName: 'sample',
-    Item: { id: id, name: name, createdAt: new Date().toISOString() }
+    TableName: 'todos',
+    Item: {
+      id: id,
+      title: title,
+      user_id: user_id,
+      description: description,
+      done: done,
+      createdAt:new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
   };
 
-  const result = await docClient.put(params).promise();
-
+  const result = await client.put(params).promise();
+  console.info(result);
   const response = {
     statusCode: 200,
-    body: JSON.stringify(result)
+    body: JSON.stringify(result.Attributes)
   };
 
   // All log statements are written to CloudWatch

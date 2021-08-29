@@ -9,18 +9,17 @@ Description: >-
 
 # Transform section specifies one or more macros that AWS CloudFormation uses to process your template
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
-Transform:
-- AWS::Serverless-2016-10-31
+Transform: AWS::Serverless-2016-10-31
 
 Parameters:
   Stage:
     Type: String
     Default: alpha
     AllowedValues: ["alpha", "beta", "gamma", "prod"]
-    Description: current deployable stage.
+    Description: current deployable stage.  
 
 Conditions:
-  isProd: !Not [!Equals [!Ref Stage, "alpha"]]
+  isProd: !Not [!Equals [!Ref Stage, prod]]
   
 Globals:
   Function:
@@ -28,6 +27,8 @@ Globals:
 # Resources declares the AWS resources that you want to include in the stack
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
 Resources:
+
+  # The Api Gateway necessary for the authorizers.
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
@@ -42,10 +43,10 @@ Resources:
   # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
 
   # This is a Lambda function config associated with the source code: get-all-items.js
-  getAllItemsFunction:
+  GetTodosFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/get-all-items.getAllItemsHandler
+      Handler: src/handlers/get.getHandler
       Runtime: nodejs14.x
       MemorySize: 128
       Timeout: 100
@@ -59,88 +60,40 @@ Resources:
           # Make table name accessible as environment variable from function code during execution
           TODOS_TABLE: !Ref TodosTable
           NODE_ENV: !If [isProd, 'production', 'development']
+          REGION: !Ref AWS::Region
       Events:
-        Api:
+        GetApi:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /
             Method: GET
-  # Each Lambda function is defined by properties:
-  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-
-  # This is a Lambda function config associated with the source code: get-by-id.js
-  getByIdFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: src/handlers/get-by-id.getByIdHandler
-      Runtime: nodejs14.x
-      MemorySize: 128
-      Timeout: 100
-      Description: A simple example includes a HTTP get method to get one item by id from a DynamoDB table.
-      Policies:
-        # Give Create/Read/Update/Delete Permissions to the SampleTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TodosTable
-      Environment:
-        Variables:
-          # Make table name accessible as environment variable from function code during execution
-          TODOS_TABLE: !Ref TodosTable
-          NODE_ENV: production
-      Events:
-        Api:
+        SingleApi:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /{id}
             Method: GET
-  # Each Lambda function is defined by properties:
-  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-
-  # This is a Lambda function config associated with the source code: put-item.js
-  putItemFunction:
+  PutTodosFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/put-item.putItemHandler
-      Runtime: nodejs14.x
-      MemorySize: 128
-      Timeout: 100
-      Description: A simple example includes a HTTP post method to add one item to a DynamoDB table.
+      Handler: src/handlers/add.putItemHandler
+      Description: Adds a todo.
       Policies:
-        # Give Create/Read/Update/Delete Permissions to the SampleTable
         - DynamoDBCrudPolicy:
             TableName: !Ref TodosTable
       Environment:
         Variables:
-          # Make table name accessible as environment variable from function code during execution
           TODOS_TABLE: !Ref TodosTable
-          NODE_ENV: production
+          NODE_ENV: !If [isProd, 'production', 'development']
+          REGION: !Ref AWS::Region
       Events:
-        Api:
+        PutTodo:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /
-            Method: POST
-
-    deleteItemFunction:
-      Type: AWS::Serverless::Function
-      Properties:
-        Handler: src/handlers/delete-item.deleteItem
-        Runtime: nodejs14.x
-        MemorySize: 128
-        Timeout: 100
-        Description: Delete a todo.
-        Policies:
-          - DynamoDBCrudPolicy:
-            TableName: !Ref TodosTable
-        Environment:
-          Variables:
-            TODOS_TABLE: !Ref TodosTable
-            NODE_ENV: production
-            
-  # Simple syntax to create a DynamoDB table with a single attribute primary key, more in
-  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlesssimpletable
+            Method: PUT
 
   # DynamoDB table to store item: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
   TodosTable:
@@ -164,10 +117,8 @@ Resources:
         - AttributeName: user_id
           KeyType: RANGE
       ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
-    
-
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
 
 Outputs:
   WebEndpoint:

@@ -12,7 +12,7 @@ exports.getHandler = async event => {
   const {
     authorizer: {
       claims: {
-
+        sub: user_id
       }
     }
   } = event.requestContext;
@@ -25,12 +25,14 @@ exports.getHandler = async event => {
     };
 
     queryParams.ExpressionAttributeValues = {
-      ':id': id
+      ':id': id,
+      ':user_id': user_id
     };
 
-    queryParams.KeyConditionExpression = '#id = :id';
+    queryParams.KeyConditionExpression = '#id = :id AND user_id = :user_id';
 
     queryParams.KeyConditionExpression = '';
+
     try {
       const j = await client.scan(queryParams).promise();
       return {
@@ -46,6 +48,10 @@ exports.getHandler = async event => {
   }
 
   try {
+    queryParams.ExpressionAttributeValues = {
+      ':user_id': user_id
+    };
+    queryParams.FilterExpression = 'user_id = :user_id';
     const scannedItems = await client.scan(queryParams).promise();
     return {
       statusCode: 200,
