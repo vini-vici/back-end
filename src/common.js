@@ -5,3 +5,11 @@ const client = new DocumentClient({
   region: REGION
 });
 exports.client = client;
+exports.addCorsHeaders =  fn => async (...args) => {
+    const response = await fn(...args);
+    response.headers = {
+      ...response.headers,
+      'Access-Control-Allow-Origin': '*'
+    };
+    return response;
+  };

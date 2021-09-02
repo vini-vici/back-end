@@ -1,10 +1,10 @@
 // Create clients and set shared const values outside of the handler.
 const { v4 } = require('uuid');
 
-const { client } = require('../common');
+const { client, addCorsHeaders } = require('../common');
 
 /** @param {import('aws-lambda').APIGatewayProxyWithCognitoAuthorizerEvent} event */
-exports.putItemHandler = async event => {
+exports.putItemHandler = addCorsHeaders(async event => {
 
   // All log statements are written to CloudWatch
   console.info('received:', event.body);
@@ -47,4 +47,4 @@ exports.putItemHandler = async event => {
   // All log statements are written to CloudWatch
   console.info(`response from: ${event.path} statusCode: ${response.statusCode} body: ${response.body}`);
   return response;
-};
+});

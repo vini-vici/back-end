@@ -1,9 +1,10 @@
-const { client } = require('../common');
+const { client, addCorsHeaders } = require('../common');
+
 /**
  * A simple example includes a HTTP get method to get all items from a DynamoDB table.
  * @param {import('aws-lambda').APIGatewayProxyWithCognitoAuthorizerEvent} event
  */
-exports.getHandler = async event => {
+exports.getHandler = addCorsHeaders(async event => {
   /** @type {import('aws-sdk/clients/dynamodb').QueryInput} */
   const queryParams = {
     TableName: 'todos'
@@ -63,4 +64,4 @@ exports.getHandler = async event => {
       statusCode: 500
     };
   }
-};
+});
