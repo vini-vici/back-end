@@ -38,10 +38,9 @@ exports.putItemHandler = addCorsHeaders(async event => {
   };
 
   const result = await client.put(params).promise();
-  console.info(result);
   const response = {
     statusCode: 200,
-    body: JSON.stringify(result.Attributes)
+    body: JSON.stringify(id)
   };
 
   // All log statements are written to CloudWatch

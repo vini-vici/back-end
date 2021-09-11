@@ -33,9 +33,13 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Stage
-      Cors: "'*'"
+      Cors:
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowMethods: "'*'"
+        AllowOrigin: "'*'"
       Auth:
         DefaultAuthorizer: MyCognitoAuthorizer
+        AddDefaultAuthorizerToCorsPreflight: false
         Authorizers:
           MyCognitoAuthorizer:
             UserPoolArn: !ImportValue  UserPoolArn
@@ -94,6 +98,47 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /
             Method: PUT
+  DeleteTodosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/delete.deleteHandler
+      Description: Removes a todo.
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TodosTable
+      Environment:
+        Variables:
+          TODOS_TABLE: !Ref TodosTable
+          NODE_ENV: !If [isProd, 'production', 'development']
+          REGION: !Ref AWS::Region
+      Events:
+        DeleteTodo:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /{id}
+            Method: DELETE
+
+  UpdateTodosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/update.updateHandler
+      Description: Updates a todo.
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TodosTable
+      Environment:
+        Variables:
+          TODOS_TABLE: !Ref TodosTable
+          NODE_ENV: !If [isProd, 'production', 'development']
+          REGION: !Ref AWS::Region
+      Events:
+        UpdateTodo:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /{id}
+            Method: POST
 
   # DynamoDB table to store item: {id: &lt;ID&gt;, name: &lt;NAME&gt;}
   TodosTable:
@@ -123,6 +168,6 @@ Resources:
 Outputs:
   WebEndpoint:
     Description: "API Gateway endpoint URL for Prod stage"
-    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/"
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
     Export:
-      Name: ApiEndpoint
+      Name: ApiEndpoint-V2

@@ -21,8 +21,10 @@ exports.deleteHandler = addCorsHeaders(async event => {
       }
     }).promise();
 
+    console.info(response.ItemCollectionMetrics, response.Attributes);
+
     return {
-      statusCode: 201,
+      statusCode: 202,
     };
 
   } catch(e) {

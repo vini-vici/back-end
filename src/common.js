@@ -9,7 +9,8 @@ exports.addCorsHeaders =  fn => async (...args) => {
     const response = await fn(...args);
     response.headers = {
       ...response.headers,
-      'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,PUT,OPTIONS'
     };
     return response;
   };
