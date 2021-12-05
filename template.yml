@@ -17,9 +17,6 @@ Parameters:
     Default: alpha
     AllowedValues: ["alpha", "beta", "gamma", "prod"]
     Description: current deployable stage.  
-
-Conditions:
-  isProd: !Not [!Equals [!Ref Stage, prod]]
   
 Globals:
   Function:
@@ -63,7 +60,7 @@ Resources:
         Variables:
           # Make table name accessible as environment variable from function code during execution
           TODOS_TABLE: !Ref TodosTable
-          NODE_ENV: !If [isProd, 'production', 'development']
+          NODE_ENV: production
           REGION: !Ref AWS::Region
       Events:
         GetApi:
@@ -89,7 +86,7 @@ Resources:
       Environment:
         Variables:
           TODOS_TABLE: !Ref TodosTable
-          NODE_ENV: !If [isProd, 'production', 'development']
+          NODE_ENV: production
           REGION: !Ref AWS::Region
       Events:
         PutTodo:
@@ -109,7 +106,7 @@ Resources:
       Environment:
         Variables:
           TODOS_TABLE: !Ref TodosTable
-          NODE_ENV: !If [isProd, 'production', 'development']
+          NODE_ENV: production
           REGION: !Ref AWS::Region
       Events:
         DeleteTodo:
@@ -130,7 +127,7 @@ Resources:
       Environment:
         Variables:
           TODOS_TABLE: !Ref TodosTable
-          NODE_ENV: !If [isProd, 'production', 'development']
+          NODE_ENV: production
           REGION: !Ref AWS::Region
       Events:
         UpdateTodo:

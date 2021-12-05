@@ -20,28 +20,28 @@ exports.getHandler = addCorsHeaders(async event => {
 
   if(event.pathParameters) {
     const { id } = event.pathParameters;
-
-    queryParams.ExpressionAttributeNames = {
-      '#id': 'id'
-    };
+    console.info('grabbing event parameters', id);
 
     queryParams.ExpressionAttributeValues = {
       ':id': id,
       ':user_id': user_id
     };
 
-    queryParams.KeyConditionExpression = '#id = :id AND user_id = :user_id';
+    console.info('Expression Attributes', queryParams);
 
-    queryParams.KeyConditionExpression = '';
+    queryParams.KeyConditionExpression = 'id = :id AND user_id = :user_id';
 
     try {
-      const j = await client.scan(queryParams).promise();
+      const j = await client.query(queryParams).promise();
+      if(j.Items.length > 1) 
+        throw Error('Too many items returned');
+      
       return {
         statusCode: 200,
-        body: JSON.stringify(j)
+        body: JSON.stringify(j.Items[0])
       };
     } catch(e) {
-      console.log(e);
+      console.error(e);
       return {
         statusCode: 500,
       };
