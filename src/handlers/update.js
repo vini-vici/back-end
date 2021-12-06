@@ -1,15 +1,16 @@
 const { addCorsHeaders, client } = require('../common');
 
 /** @param {import('aws-lambda').APIGatewayProxyWithCognitoAuthorizerEvent} event */
-exports.updateFunction = addCorsHeaders(async event => {
+exports.updateHandler = addCorsHeaders(async event => {
 
   const {
-    authorizers: {
+    authorizer: {
       claims: {
         sub: user_id
       }
     }
   } = event.requestContext;
+
   const { id } = event.pathParameters;
   const {
     title,
@@ -51,7 +52,7 @@ exports.updateFunction = addCorsHeaders(async event => {
 
     // Return.
     return {
-      statusCode: 500,
+      statusCode: 200,
       body: JSON.stringify(resp)
     };
   } catch(e) {
