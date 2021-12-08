@@ -37,7 +37,7 @@ exports.updateHandler = addCorsHeaders(async event => {
       // update or keep the desc
       description: description || originalItem.description,
       // update or keep the done
-      done: done || true,
+      done: done ?? true,
       // keep the created at
       createdAt: originalItem.createdAt,
       // update the updated at

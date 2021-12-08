@@ -4,5 +4,8 @@
   ],
   "extends": [
     "plugin:@core-fabrications/recommended"
-  ]
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2020
+  }
 }
