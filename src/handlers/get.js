@@ -61,7 +61,8 @@ exports.getHandler = addCorsHeaders(async event => {
   } catch (e) {
     console.log(e);
     return {
-      statusCode: 500
+      statusCode: 500,
+      body: 'bad'
     };
   }
 });

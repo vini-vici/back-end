@@ -1,0 +1,21 @@
+on:
+  pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      # Use pnpm
+      - uses: pnpm/actions-setup@2.0.1
+        with:
+          version: 6.23.6
+      # Use node 16
+      - name: Uses Node 16
+        with:
+          node-version: 16.x
+          cache: 'pnpm'
+      - run: pnpm i --frozen-lockfile --ignore-scripts
+      - run: pnpm test
+      
