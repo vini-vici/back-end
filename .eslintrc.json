@@ -2,10 +2,13 @@
   "plugins": [
     "@core-fabrications"
   ],
+  "env": {
+    "jest": true
+  },
   "extends": [
     "plugin:@core-fabrications/recommended"
   ],
   "parserOptions": {
-    "ecmaVersion": 2020
+    "ecmaVersion": 2020,
   }
 }
