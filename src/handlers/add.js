@@ -38,6 +38,7 @@ exports.putItemHandler = addCorsHeaders(async event => {
   };
 
   const result = await client.put(params).promise();
+  console.info(result);
   const response = {
     statusCode: 200,
     body: JSON.stringify(id)
