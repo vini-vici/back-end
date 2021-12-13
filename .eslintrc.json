@@ -2,6 +2,9 @@
   "plugins": [
     "@core-fabrications"
   ],
+  "env": {
+    "jest": true
+  },
   "extends": [
     "plugin:@core-fabrications/recommended"
   ],
