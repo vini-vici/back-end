@@ -47,7 +47,7 @@ Resources:
   GetTodosFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/get.getHandler
+      Handler: dist/handlers/get.getHandler
       Runtime: nodejs14.x
       MemorySize: 128
       Timeout: 100
@@ -78,7 +78,7 @@ Resources:
   PutTodosFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/add.putItemHandler
+      Handler: dist/handlers/add.putItemHandler
       Description: Adds a todo.
       Policies:
         - DynamoDBCrudPolicy:
@@ -98,7 +98,7 @@ Resources:
   DeleteTodosFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/delete.deleteHandler
+      Handler: dist/handlers/delete.deleteHandler
       Description: Removes a todo.
       Policies:
         - DynamoDBCrudPolicy:
@@ -119,7 +119,7 @@ Resources:
   UpdateTodosFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/handlers/update.updateHandler
+      Handler: dist/handlers/update.updateHandler
       Description: Updates a todo.
       Policies:
         - DynamoDBCrudPolicy:

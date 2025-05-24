@@ -1,14 +1,23 @@
 {
   "plugins": [
-    "@core-fabrications"
+    "@typescript-eslint"
   ],
   "env": {
-    "jest": true
+    "jest": true,
+    "node": true
   },
   "extends": [
-    "plugin:@core-fabrications/recommended"
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
   ],
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2020
+    "ecmaVersion": 2020,
+    "sourceType": "module"
+  },
+  "rules": {
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
   }
 }
